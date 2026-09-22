@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Araras Oculta</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--bg:#090b0a;--card:#151916;--line:#2c352e;--gold:#d5b56a;--muted:#aab2ab}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#eee;font:16px Arial,sans-serif}
+header{position:sticky;top:0;z-index:10;background:#101410ee;backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:18px 5%}
+.logo{font-size:27px;font-weight:800;color:var(--gold)}nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+button,.btn{border:1px solid #3b463d;background:#202721;color:#eee;padding:10px 13px;border-radius:8px;cursor:pointer;text-decoration:none;display:inline-block}
+button:hover,.btn:hover{background:#303a32}.hero{padding:65px 5%;background:radial-gradient(circle at 75% 20%,#30382d,transparent 38%)}
+.hero h1{font-size:clamp(35px,6vw,60px);margin:0 0 12px}.hero p{max-width:760px;color:var(--muted);line-height:1.7;font-size:18px}
+.container{width:min(1180px,90%);margin:auto}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:25px 0}.toolbar input,.form input,.form textarea,.form select{background:#101310;color:#eee;border:1px solid #39433b;border-radius:8px;padding:12px;width:100%}.search{flex:1;min-width:240px}
+#map{height:430px;border-radius:14px;border:1px solid var(--line);overflow:hidden}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px;margin:25px 0 50px}.card{background:var(--card);border:1px solid var(--line);border-radius:13px;overflow:hidden}.cover{height:155px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#333b34,#171b18);font-size:50px}.body{padding:18px}.body h3{margin:9px 0;color:var(--gold)}.body p{color:var(--muted);line-height:1.55}.tag{display:inline-block;background:#293329;padding:5px 8px;border-radius:20px;font-size:12px}
+section{padding:28px 0}.notice{padding:16px;background:#171b18;border-left:3px solid var(--gold);border-radius:8px;color:#b8c0b9;line-height:1.5}
+.modal{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;padding:20px;z-index:30}.modal.show{display:flex}.box{background:#151916;border:1px solid var(--line);border-radius:14px;width:min(760px,100%);max-height:90vh;overflow:auto;padding:24px}.close{float:right}.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:15px 0}.gallery div{height:110px;background:#29302a;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#8f9991}
+.form{display:grid;gap:12px}.form textarea{min-height:130px;resize:vertical}.small{font-size:13px;color:#858e87}footer{border-top:1px solid var(--line);padding:30px 5%;text-align:center;color:#778078;margin-top:30px}
+@media(max-width:600px){.gallery{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header><div class="logo">🕵️ ARARAS OCULTA</div><div style="color:#929b94;margin-top:3px">Histórias, lugares e memórias escondidas de Araras</div>
+<nav><button onclick="go('mapa')">Mapa</button><button onclick="go('locais')">Locais</button><button onclick="go('enviar')">Enviar local</button><button onclick="go('sobre')">Sobre</button></nav></header>
+
+<section class="hero"><div class="container"><h1>Descubra o que o tempo deixou para trás.</h1>
+<p>Um catálogo colaborativo de lugares históricos, abandonados e esquecidos de Araras — com pesquisa, mapa, fotografias e histórias.</p>
+<div class="toolbar"><input class="search" id="search" placeholder="🔎 Pesquisar local, categoria ou palavra..." oninput="render()"><button onclick="clearSearch()">Todos</button></div></div></section>
+
+<main class="container">
+<section id="mapa"><h2>🗺️ Mapa dos locais</h2><div id="map"></div></section>
+<div class="notice">⚠️ O projeto é voltado à pesquisa histórica. Não incentivamos invasão, depredação ou entrada em propriedades privadas. Para locais sensíveis, a localização pode ser aproximada.</div>
+
+<section id="locais"><h2>📍 Locais cadastrados</h2><div class="grid" id="cards"></div></section>
+
+<section id="enviar"><h2>📸 Você conhece um local?</h2><p style="color:var(--muted)">Use este formulário como modelo para enviar informações. Nesta versão gratuita, o formulário apenas prepara uma mensagem; depois podemos conectar a um banco de dados.</p>
+<form class="form" onsubmit="enviar(event)"><input id="nome" placeholder="Nome do local (se souber)" required><select id="categoria"><option>Fazenda histórica</option><option>Casa / casarão</option><option>Prédio abandonado</option><option>Ferrovia / estação</option><option>Indústria antiga</option><option>Ruína</option><option>Outro</option></select><input id="localizacao" placeholder="Bairro ou região"><textarea id="historia" placeholder="Conte o que você sabe sobre o local..."></textarea><input id="foto" type="text" placeholder="Link de foto (opcional)"><button type="submit">Preparar envio</button></form><p id="resultado" class="small"></p></section>
+
+<section id="sobre"><h2>📚 Sobre o projeto</h2><p style="color:var(--muted);line-height:1.7">O Araras Oculta nasceu com a ideia de preservar a memória de lugares que podem desaparecer com o tempo. As informações devem ser verificadas sempre que possível, com fontes, fotografias antigas, documentos e relatos identificados.</p></section>
+</main><footer>© 2026 Araras Oculta — Projeto independente de memória local.</footer>
+
+<div class="modal" id="modal"><div class="box"><button class="close" onclick="fechar()">✕</button><div id="detalhe"></div></div></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const locais=[
+{id:1,nome:"Fazenda histórica — exemplo",cat:"Fazenda histórica",regiao:"Araras",status:"Pesquisa",lat:-22.3569,lng:-47.3842,resumo:"Exemplo de ficha. Substitua por uma fazenda real após verificar as informações.",historia:"Aqui entrará a história documentada do local, incluindo proprietários históricos, atividade econômica, alterações e situação atual.",fontes:"A preencher"},
+{id:2,nome:"Construção abandonada — exemplo",cat:"Prédio abandonado",regiao:"Araras",status:"Abandonado",lat:-22.361,lng:-47.390,resumo:"Exemplo de cadastro para uma construção abandonada.",historia:"Aqui entrará a pesquisa histórica e fotografias do local.",fontes:"A preencher"},
+{id:3,nome:"Antiga ferrovia — exemplo",cat:"Ferrovia / estação",regiao:"Araras",status:"Patrimônio",lat:-22.355,lng:-47.375,resumo:"Exemplo de cadastro para patrimônio ferroviário.",historia:"Aqui entrará a história da linha, estação ou estrutura ferroviária.",fontes:"A preencher"}
+];
+const map=L.map('map').setView([-22.3569,-47.3842],13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);let marks=[];
+function render(){let q=document.getElementById('search').value.toLowerCase();let arr=locais.filter(x=>(x.nome+' '+x.cat+' '+x.regiao+' '+x.status+' '+x.resumo).toLowerCase().includes(q));
+document.getElementById('cards').innerHTML=arr.map(x=>`<article class="card"><div class="cover">🏚️</div><div class="body"><span class="tag">${x.cat}</span><h3>${x.nome}</h3><p>${x.resumo}</p><p class="small">📍 ${x.regiao} · ${x.status}</p><button onclick="abrir(${x.id})">Ver ficha completa</button> <button onclick="map.setView([${x.lat},${x.lng}],16)">Mapa</button></div></article>`).join('');
+marks.forEach(m=>map.removeLayer(m));marks=[];arr.forEach(x=>marks.push(L.marker([x.lat,x.lng]).addTo(map).bindPopup(`<b>${x.nome}</b><br>${x.cat}<br><button onclick="abrir(${x.id})">Abrir ficha</button>`)));
+}
+function abrir(id){let x=locais.find(a=>a.id===id);document.getElementById('detalhe').innerHTML=`<span class="tag">${x.cat}</span><h2>${x.nome}</h2><p><b>📍 Região:</b> ${x.regiao}<br><b>🏚️ Situação:</b> ${x.status}</p><div class="gallery"><div>📷 Foto 1</div><div>📷 Foto 2</div><div>📷 Foto 3</div></div><h3>História</h3><p style="color:var(--muted);line-height:1.7">${x.historia}</p><h3>Fontes</h3><p class="small">${x.fontes}</p><p class="small">As informações desta ficha são demonstrativas até serem substituídas por pesquisa verificada.</p>`;document.getElementById('modal').classList.add('show')}
+function fechar(){document.getElementById('modal').classList.remove('show')}
+function clearSearch(){document.getElementById('search').value='';render()}
+function go(id){document.getElementById(id).scrollIntoView({behavior:'smooth'})}
+function enviar(e){e.preventDefault();let n=document.getElementById('nome').value,c=document.getElementById('categoria').value,l=document.getElementById('localizacao').value,h=document.getElementById('historia').value;let msg=`Local: ${n}%0ACategoria: ${c}%0ARegião: ${l}%0AInformações: ${h}`;document.getElementById('resultado').innerHTML=`Formulário preparado. Para uma versão conectada, podemos enviar automaticamente para um banco de dados. <a class="btn" href="mailto:?subject=Novo local - Araras Oculta&body=${msg}">Abrir e-mail</a>`}
+render();
+</script></body></html>
